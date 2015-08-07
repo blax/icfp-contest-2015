@@ -1,0 +1,22 @@
+name:               icfp-contest-mmxv
+version:            1.0
+build-type:         Simple
+cabal-version:      >= 1.20
+license:            MIT
+copyright:          Copyright © 2015 The Church of the Least Fixed Point
+author:             Miëtek Bak <hello@mietek.io>
+maintainer:         Miëtek Bak <hello@mietek.io>
+stability:          experimental
+homepage:           https://github.com/mietek/icfp-contest-2015
+license-file:       LICENSE.md
+extra-source-files: README.md
+synopsis:           TODO
+description:        TODO
+
+executable icfp-contest-mmxv
+  hs-source-dirs:     src
+  main-is:            Main.hs
+  default-language:   Haskell2010
+  ghc-options:        -O2 -Wall -threaded
+  build-depends:      base,
+                      optparse-applicative
