@@ -11,5 +11,7 @@ About
 
 - Miëtek Bak
 - Arek Flinik
+- Tom Ellis
+- Jan Dudek
 
 Published under the [MIT X11 license](LICENSE.md).
