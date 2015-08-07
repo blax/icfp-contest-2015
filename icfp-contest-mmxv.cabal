@@ -8,12 +8,12 @@ author:             Miëtek Bak <hello@mietek.io>
 maintainer:         Miëtek Bak <hello@mietek.io>
 stability:          experimental
 homepage:           https://github.com/mietek/icfp-contest-2015
-license-file:       LICENSE.md
-extra-source-files: README.md
+license-file:       LICENSE
+extra-source-files: README
 synopsis:           TODO
 description:        TODO
 
-executable icfp-contest-mmxv
+executable play_icfp2015
   hs-source-dirs:     src
   main-is:            Main.hs
   default-language:   Haskell2010
