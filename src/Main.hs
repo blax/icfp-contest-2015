@@ -9,6 +9,7 @@ data Options = Options {
     optInputFiles :: [FilePath],
     optTimeLimit :: Int,
     optMemoryLimit :: Int,
+    optCoreCount :: Int,
     optPowerPhrases :: [String]}
   deriving (Show)
 
@@ -30,6 +31,11 @@ parseOptions =
         O.metavar "NUMBER" <>
         O.value 0 <>
         O.help "Memory limit, in megabytes, to produce output") <*>
+      O.option O.auto (
+        O.short 'c' <>
+        O.metavar "NUMBER" <>
+        O.value 0 <>
+        O.help "Number of processor cores available") <*>
       O.many (
         O.strOption (
           O.short 'p' <>
