@@ -18,5 +18,10 @@ executable play_icfp2015
   main-is:            Main.hs
   default-language:   Haskell2010
   ghc-options:        -O2 -Wall -threaded
-  build-depends:      base,
-                      optparse-applicative
+  build-depends:      aeson,
+                      attoparsec,
+                      base,
+                      bytestring,
+                      microlens,
+                      optparse-applicative,
+                      wreq
