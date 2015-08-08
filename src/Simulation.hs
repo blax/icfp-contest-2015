@@ -25,8 +25,9 @@ initialState i seed =
               }
   where
     (currentUnit:nextUnits) = map getUnit unitIndexes
-    getUnit n = (iUnits i) !! (mod n $ length $ iUnits i)
+    getUnit n = units !! (mod n $ length units)
     unitIndexes = take (iSourceLength i) $ randoms $ mkLCGen seed
+    units = map (centerUnit $ iWidth i) (iUnits i)
 
 applyCommand :: GameState -> Command -> GameState
 applyCommand state command = state { gCurrentUnit = newCurrentUnit }
@@ -47,14 +48,19 @@ applyCommandToUnit unit (Rotate direction) =
     pivot = uPivot unit
 
 moveCell :: MoveCommand -> Cell -> Cell
-moveCell move Cell { cX = x, cY = y} =
-    Cell { cX = newX, cY = newY }
+moveCell move cell =
+    moveCellBy dX dY cell
   where
-    (newX, newY) = case move of
-      E  -> (x + 1, y)
-      W  -> (x - 1, y)
-      SE -> (x, y + 1)
-      SW -> (x - 1, y + 1)
+    (dX, dY) = case move of
+      E  -> (1, 0)
+      W  -> (-1, 0)
+      SE -> (0, 1)
+      SW -> (-1, 1)
+
+moveCellBy :: Int -> Int -> Cell -> Cell
+moveCellBy dX dY Cell { cX = x, cY = y } =
+  Cell { cX = (x+dX), cY = (y+dY) }
+
 
 rotateCell :: Cell -> RotationCommand -> Cell -> Cell
 rotateCell pivot direction Cell { cX = x, cY = y } =
@@ -65,3 +71,19 @@ rotateCell pivot direction Cell { cX = x, cY = y } =
     (newX, newY) = case direction of
       CW -> (-1 * dY, dX + dY)
       CCW -> (dX + dY, -1 * dX)
+
+-- I am not very proud of this function, but enough is enough
+centerUnit :: Int -> Unit -> Unit
+centerUnit width unit =
+    unit { uMembers = newMembers, uPivot = newPivot }
+  where
+    newMembers = map centeringMove $ uMembers unit
+    newPivot = centeringMove $ uPivot unit
+    centeringMove = moveCellBy delta 0
+    delta = (minRightDistance - minLeftDistance) `div` 2
+    minRightDistance = minimum $ map (rightDistance width) $ uMembers unit
+    minLeftDistance = minimum $ map (leftDistance) $ uMembers unit
+    leftDistance Cell {cX = x, cY = y} =
+        x + (y `quot` 2)
+    rightDistance w Cell {cX = x, cY = y} =
+        (w-1) - x - (y `quot` 2)
