@@ -24,4 +24,5 @@ executable play_icfp2015
                       bytestring,
                       microlens,
                       optparse-applicative,
+                      random,
                       wreq
