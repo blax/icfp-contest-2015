@@ -1,0 +1,76 @@
+body {
+  font: 14px "Helvetica Neue", Arial, sans-serif;
+}
+
+.board {
+  position: relative;
+}
+
+.hexagon {
+  position: relative;
+  background-color: currentcolor;
+}
+
+.hexagon:before,
+.hexagon:after {
+  content: "";
+  position: absolute;
+  width: 0;
+}
+
+.hexagon:before {
+  bottom: 100%;
+}
+
+.hexagon:after {
+  top: 100%;
+  width: 0;
+}
+
+.hexagon-55 {
+  width: 55px;
+  height: 31.75px;
+  margin: 15.88px 0;
+}
+
+.hexagon-55:before,
+.hexagon-55:after {
+  border-left: 27.5px solid transparent;
+  border-right: 27.5px solid transparent;
+}
+
+.hexagon-55:before {
+  border-bottom: 15.88px solid currentcolor;
+}
+
+.hexagon-55:after {
+  border-top: 15.88px solid currentcolor;
+}
+
+.hexagon-56 {
+  width: 56px;
+  height: 32.33px;
+  margin: 16.17px 0;
+}
+
+.hexagon-56:before,
+.hexagon-56:after {
+  border-left: 28px solid transparent;
+  border-right: 28px solid transparent;
+}
+
+.hexagon-56:before {
+  border-bottom: 16.17px solid currentcolor;
+}
+
+.hexagon-56:after {
+  border-top: 16.17px solid currentcolor;
+}
+
+.hexagon-gray {
+  color: #EEEEEE;
+}
+
+.hexagon-yellow {
+  color: #FFCC66;
+}
