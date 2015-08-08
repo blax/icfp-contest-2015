@@ -1,7 +1,7 @@
 module Simulator.Unit where
 
 import Simulator.Cell exposing (..)
-import Simulator.Move exposing (..)
+import Simulator.Command exposing (..)
 
 type alias Unit =
   { cells: List Cell

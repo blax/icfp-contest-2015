@@ -6,6 +6,8 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 
 import Simulator.Simulation as Simulation
+import Simulator.Input as Input
+import Simulator.Output as Output
 
 type Action = InputChange String | OutputChange String | Submit
 
@@ -39,6 +41,29 @@ initialModel =
   , simulation = Nothing
   }
 
+toSimulation : Model -> Maybe Simulation.Model
+toSimulation model =
+  let
+    input : Result String Input.Input
+    input =
+      Input.parse model.input
+
+    output : Result String (List Output.Output)
+    output =
+      Output.parse model.output
+
+    toSimulationModel : Input.Input -> List Output.Output -> Simulation.Model
+    toSimulationModel input outputs =
+      let
+        (unit, units) = (\(head :: tail) -> (head, tail)) input.units -- hackish
+      in
+        { width = input.width
+        , height = input.height
+        , filled = input.filled
+        , unit = unit
+        }
+  in
+    Result.toMaybe (Result.map2 toSimulationModel input output)
 
 -- update
 
@@ -51,9 +76,9 @@ update action model =
       { model | output <- s }
 
     Submit ->
-      { model | simulation <- Just Simulation.init }
+      { model | simulation <- toSimulation model }
 
--- model
+-- view
 
 onChangeSendAction address valueToAction =
    on "change" targetValue (\v -> Signal.message address (valueToAction v))

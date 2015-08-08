@@ -1,6 +1,6 @@
 module Simulator.Cell where
 
-import Simulator.Move exposing (..)
+import Simulator.Command exposing (..)
 
 type alias Cell = (Int, Int)
 

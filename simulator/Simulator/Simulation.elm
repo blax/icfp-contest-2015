@@ -3,7 +3,7 @@ module Simulator.Simulation (Model, init, update, view) where
 import Html exposing (..)
 import Html.Attributes exposing (..)
 
-import Simulator.Move exposing (..)
+import Simulator.Command exposing (..)
 import Simulator.Cell exposing (..)
 import Simulator.Unit exposing (..)
 

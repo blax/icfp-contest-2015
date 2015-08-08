@@ -1,0 +1,43 @@
+module Simulator.Input where
+
+import Json.Decode as Json exposing (..)
+
+import Simulator.Cell exposing (Cell)
+import Simulator.Unit exposing (Unit)
+
+type alias Input =
+  { id: Int
+  , width: Int
+  , height: Int
+  , filled: List Cell
+  , units: List Unit
+  , sourceSeeds: List Int
+  , sourceLength: Int
+  }
+
+parse : String -> Result String Input
+parse inputString =
+  decodeString decoder inputString
+
+decoder : Decoder Input
+decoder =
+  object7 Input
+    ("id" := int)
+    ("width" := int)
+    ("height" := int)
+    ("filled" := list cell)
+    ("units" := list unit)
+    ("sourceSeeds" := list int)
+    ("sourceLength" := int)
+
+cell : Decoder Cell
+cell =
+  object2 (,)
+    ("x" := int)
+    ("y" := int)
+
+unit : Decoder Unit
+unit =
+  object2 Unit
+    ("members" := list cell)
+    ("pivot" := cell)
