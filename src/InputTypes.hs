@@ -34,10 +34,17 @@ instance A.FromJSON Input where
   parseJSON _ = mzero
 
 instance A.FromJSON Cell where
-  parseJSON (A.Object v) = Cell <$> v A..: "x" <*> v A..: "y"
+  parseJSON (A.Object v) = transformCoords <$> (Cell <$> v A..: "x" <*> v A..: "y")
+
   parseJSON _ = mzero
 
 instance A.FromJSON Unit where
   parseJSON (A.Object v) = Unit <$> v A..: "members"
                                 <*> v A..: "pivot"
   parseJSON _ = mzero
+
+transformCoords :: Cell -> Cell
+transformCoords c = c { cX = x', cY = y'} where
+  x' = x - (y `div` 2)
+  y' = y
+  (x, y) = (cX c, cY c)
