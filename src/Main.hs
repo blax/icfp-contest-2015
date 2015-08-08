@@ -1,9 +1,12 @@
 module Main where
 
+import Data.Aeson (decode)
+import qualified Data.ByteString.Lazy as BL
 import Options.Applicative ((<$>), (<*>), (<>), Parser, ParserInfo)
-
 import qualified Options.Applicative as O
 
+import InputTypes
+import InputPresenter as IP
 
 data Options = Options {
     optInputFiles :: [FilePath],
@@ -46,8 +49,12 @@ withInfo :: Parser a -> String -> ParserInfo a
 withInfo parser info =
     O.info (O.helper <*> parser) (O.progDesc info)
 
+printProblemFromFile :: FilePath -> IO ()
+printProblemFromFile f = do
+  Just input <- decode <$> BL.readFile f :: IO (Maybe Input)
+  IP.showProblem input
 
 main :: IO ()
 main = do
     opts <- O.execParser (parseOptions `withInfo` "Solve the problem")
-    print opts
+    mapM_ printProblemFromFile $ optInputFiles opts
