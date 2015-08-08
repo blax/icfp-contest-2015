@@ -10,24 +10,28 @@ x = fst
 y : Cell -> Int
 y = snd
 
---moveCellBy (dx, dy) cell =
---  (x cell + dx, y cell + dy)
-
-
+moveCell : Move -> Cell -> Cell
 moveCell move (x, y) =
   case move of
     E  -> (x + 1, y)
     W  -> (x - 1, y)
-    SE ->
-      if isEven y then
-        (x,     y + 1)
-      else
-        (x + 1, y + 1)
-    SW ->
-      if isEven y then
-        (x - 1, y + 1)
-      else
-        (x,     y + 1)
+    SE -> (x, y + 1)
+    SW -> (x - 1, y + 1)
+
+rotateCell : Rotation -> Cell -> Cell -> Cell
+rotateCell rotation pivot cell =
+  let
+    (cx, cy) = cell
+    (px, py) = pivot
+    (dx, dy) = (cx - px, cy - py)
+    (dx', dy') =
+      case rotation of
+        CW ->
+          (-1 * dy, dx + dy)
+        CCW ->
+          (dx + dy, -1 * dx)
+  in
+    (dx' + px, dy' + py)
 
 -- private
 

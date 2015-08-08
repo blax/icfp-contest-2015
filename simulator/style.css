@@ -4,6 +4,8 @@ body {
 
 .board {
   position: relative;
+  top: 100px;
+  left: 100px;
 }
 
 .hexagon {
@@ -77,4 +79,18 @@ body {
 
 .hexagon-yellow {
   color: #FFCC66;
+}
+
+.hexagon-violet {
+  color: #CFD3FF;
+}
+
+.hexagon span {
+  position: absolute;
+  top: 8px;
+  left: 0;
+  z-index: 10;
+  color: #000;
+  right: 0;
+  text-align: center;
 }

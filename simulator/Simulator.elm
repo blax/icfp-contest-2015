@@ -8,6 +8,8 @@ import Simulator.Move exposing (..)
 import Simulator.Cell exposing (..)
 import Simulator.Unit exposing (..)
 
+type InputCell = InputCell (Int, Int)
+
 type alias Model =
   { width : Int
   , height : Int
@@ -17,12 +19,28 @@ type alias Model =
 
 type alias Action = ()
 
-input = [SE, SW, E]
+
+sgn : Int -> Int
+sgn x =
+  if x < 0 then -1 else 1
+
+fromInputCell : InputCell -> Cell
+fromInputCell (InputCell (x, y)) =
+  (x - floor (toFloat y / 2), y)
+
+toInputCell : Cell -> InputCell
+toInputCell (x, y) =
+  InputCell (x + floor (toFloat y / 2), y)
+
+inputCommands = [Move SE, Rotate CCW]
 
 main =
   let
+    applyCommand command model =
+      { model | unit <- commandUnit command model.unit }
+
     model =
-      List.foldl (\move model -> { model | unit <- moveUnit move model.unit }) initialModel input
+      List.foldl applyCommand initialModel inputCommands
 
     app =
       { model = model, view = view, update = update }
@@ -31,12 +49,24 @@ main =
 
 -- model
 
+inputModel =
+  { width = 15
+  , height = 15
+  , filled = []
+  , unit = { cells = [InputCell (0, 2)], pivot = InputCell (0, 0) }
+  }
+
+fromInputUnit inputUnit =
+  { inputUnit |
+    cells <- (List.map fromInputCell inputUnit.cells)
+  , pivot <- fromInputCell inputUnit.pivot
+  }
+
 initialModel : Model
 initialModel =
-  { width = 5
-  , height = 10
-  , filled = [(2, 5), (3, 6)]
-  , unit = { cells = [(0, 0), (0, 1), (1, 1)], pivot = (1, 0) }
+  { inputModel |
+    filled <- List.map fromInputCell inputModel.filled
+  , unit <- fromInputUnit inputModel.unit
   }
 
 product : List a -> List b -> List (a, b)
@@ -51,8 +81,10 @@ allCells model =
   let
     range a b =
       if a < b then a :: range (a + 1) b else []
+    pairs =
+      product (range 0 model.width) (range 0 model.height)
   in
-    product (range 0 model.width) (range 0 model.height)
+    List.map (fromInputCell << InputCell) pairs
 
 
 -- update
@@ -71,11 +103,12 @@ view address model =
 cellCssPosition : Cell -> List (String, String)
 cellCssPosition cell =
   let
+    (x, y) = case toInputCell cell of InputCell (x, y) -> (x, y)
     cellSize = 56
     cellSpacing = 2
     w = (cellSize + cellSpacing)
-    xPos = x cell * w + (if y cell % 2 == 1 then round (0.5 * w) else 0)
-    yPos = y cell * (cellSize - 6)
+    xPos = x * w + (if y % 2 == 1 then round (0.5 * w) else 0)
+    yPos = y * (cellSize - 6)
   in
     [ ("left", (toString xPos) ++ "px")
     , ("top",  (toString yPos) ++ "px")
@@ -87,7 +120,8 @@ cellView color cell =
     [ class ("hexagon hexagon-56 hexagon-" ++ color)
     , style (cellCssPosition cell)
     ]
-    []
+    [ span [] [ text (toString (x cell) ++ "," ++ toString (y cell))]
+    ]
 
 pivotView : Cell -> Html
 pivotView pivot =
@@ -107,7 +141,7 @@ boardView model =
       List.map (cellView "yellow") (model.filled)
 
     unitCellsViews unit =
-      (List.map (cellView "yellow") unit.cells) ++ [pivotView unit.pivot]
+      (List.map (cellView "violet") unit.cells) ++ [pivotView unit.pivot]
   in
     div [class "board"]
       (allCellsViews ++ filledCellsViews ++ unitCellsViews model.unit)
