@@ -13,9 +13,3 @@ moveUnit move unit =
     cells <- List.map (moveCell move) unit.cells
   , pivot <- (moveCell move) unit.pivot
   }
-
--- private
-
-isEven : Int -> Bool
-isEven n =
-  n % 2 == 0

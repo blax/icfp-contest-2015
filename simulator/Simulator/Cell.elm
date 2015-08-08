@@ -34,9 +34,3 @@ moveCell move (x, y) =
 isEven : Int -> Bool
 isEven n =
   n % 2 == 0
-
---bottomEdge : Unit -> Int
---bottomEdge unit =
---  case List.maximum (List.map y unit.cells) of
---    Just y -> y
---    Nothing -> 0
