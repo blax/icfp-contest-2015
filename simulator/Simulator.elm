@@ -36,8 +36,8 @@ main =
 -- model
 
 initialModel =
-  { input = ""
-  , output = ""
+  { input = Input.sample
+  , output = Output.sample
   , simulation = Nothing
   }
 
@@ -93,10 +93,12 @@ view address model =
     div []
       [ input
           [ placeholder "Program input"
+          , value model.input
           , onChangeSendAction address InputChange]
           []
       , input
           [ placeholder "Program output"
+          , value model.output
           , onChangeSendAction address OutputChange]
           []
       , button [onClick address Submit] [text "Update"]
