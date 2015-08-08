@@ -2,10 +2,14 @@ body {
   font: 14px "Helvetica Neue", Arial, sans-serif;
 }
 
+textarea {
+  width: 320px;
+  height: 160px;
+  margin: 0 24px 24px 0;
+}
+
 .board {
   position: relative;
-  top: 100px;
-  left: 100px;
 }
 
 .hexagon {
