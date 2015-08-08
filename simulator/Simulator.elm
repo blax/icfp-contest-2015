@@ -4,27 +4,39 @@ import StartApp
 import Html exposing (..)
 import Html.Attributes exposing (..)
 
-type alias Cell = { x : Int, y : Int }
+import Simulator.Move exposing (..)
+import Simulator.Cell exposing (..)
+import Simulator.Unit exposing (..)
 
 type alias Model =
   { width : Int
   , height : Int
   , filled : List Cell
+  , unit : Unit
   }
 
 type alias Action = ()
 
+input = [SE, SW, E]
+
 main =
   let
-    app = { model = initialModel, view = view, update = update }
+    model =
+      List.foldl (\move model -> { model | unit <- moveUnit move model.unit }) initialModel input
+
+    app =
+      { model = model, view = view, update = update }
   in
     StartApp.start app
+
+-- model
 
 initialModel : Model
 initialModel =
   { width = 5
   , height = 10
-  , filled = [{x = 2, y = 5}, {x = 3, y = 6}]
+  , filled = [(2, 5), (3, 6)]
+  , unit = { cells = [(0, 0), (0, 1), (1, 1)], pivot = (1, 0) }
   }
 
 product : List a -> List b -> List (a, b)
@@ -39,17 +51,17 @@ allCells model =
   let
     range a b =
       if a < b then a :: range (a + 1) b else []
-
-    toCell (x, y) =
-      { x = x, y = y }
-
-    pairs = product (range 0 model.width) (range 0 model.height)
   in
-    List.map toCell pairs
+    product (range 0 model.width) (range 0 model.height)
+
+
+-- update
 
 update : Action -> Model -> Model
 update action model =
   model
+
+-- view
 
 view address model =
   div []
@@ -62,22 +74,40 @@ cellCssPosition cell =
     cellSize = 56
     cellSpacing = 2
     w = (cellSize + cellSpacing)
-    x = cell.x * w + (if cell.y % 2 == 1 then round (0.5 * w) else 0)
-    y = cell.y * (cellSize - 6)
+    xPos = x cell * w + (if y cell % 2 == 1 then round (0.5 * w) else 0)
+    yPos = y cell * (cellSize - 6)
   in
-    [ ("left", (toString x) ++ "px")
-    , ("top",  (toString y) ++ "px")
+    [ ("left", (toString xPos) ++ "px")
+    , ("top",  (toString yPos) ++ "px")
     ]
 
 cellView : String -> Cell -> Html
 cellView color cell =
   div
     [ class ("hexagon hexagon-56 hexagon-" ++ color)
-    , style ([("position", "absolute")] ++ (cellCssPosition cell))
+    , style (cellCssPosition cell)
+    ]
+    []
+
+pivotView : Cell -> Html
+pivotView pivot =
+  div
+    [ class ("hexagon hexagon-56 hexagon-dark-gray")
+    , style ((cellCssPosition pivot) ++ [("transform", "scale(0.5)")])
     ]
     []
 
 boardView : Model -> Html
 boardView model =
-  div [class "board"]
-    ((List.map (cellView "gray") (allCells model)) ++ (List.map (cellView "yellow") (model.filled)))
+  let
+    allCellsViews =
+      List.map (cellView "gray") (allCells model)
+
+    filledCellsViews =
+      List.map (cellView "yellow") (model.filled)
+
+    unitCellsViews unit =
+      (List.map (cellView "yellow") unit.cells) ++ [pivotView unit.pivot]
+  in
+    div [class "board"]
+      (allCellsViews ++ filledCellsViews ++ unitCellsViews model.unit)
