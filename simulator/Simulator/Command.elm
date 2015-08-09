@@ -49,4 +49,4 @@ sequence list =
         Nothing ->
           Nothing
   in
-    List.foldl step (Just []) list
+    List.foldr step (Just []) list
