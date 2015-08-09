@@ -1,4 +1,4 @@
-module Simulator.Simulation (Model, update, view, updateOnce) where
+module Simulator.Simulation (Model, init, update, view) where
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -13,11 +13,30 @@ type alias Model =
   { width : Int
   , height : Int
   , filled : List Cell
-  , unit : Maybe Unit
+  , unit : Unit
   , units : List Unit
   , commands : List Command
   , gameOver : Bool
   }
+
+init attributes =
+  let
+    centeredUnits =
+      List.map (centerUnit attributes.width) attributes.units
+
+    (unit :: units) = centeredUnits
+
+    fixedAttributes =
+      { attributes | units <- units }
+
+    almostModel =
+      { fixedAttributes | gameOver = False }
+
+    model : Model
+    model =
+      { almostModel | unit = unit }
+  in
+    model
 
 product : List a -> List b -> List (a, b)
 product xs ys =
@@ -35,7 +54,6 @@ allCells model =
       product (range 0 model.width) (range 0 model.height)
   in
     List.map (fromInputCell << InputCell) pairs
-
 
 -- update
 
@@ -55,54 +73,41 @@ isValidPosition model =
     withinBounds unit =
       List.all cellWithinBounds unit.cells
 
-    result unit =
-      withinBounds unit && not (colliding unit)
   in
-    Maybe.withDefault True (Maybe.map result model.unit)
+    withinBounds model.unit && not (colliding model.unit)
 
 spawnNextUnit : Model -> Model
 spawnNextUnit model =
   case model.units of
     (head :: tail) ->
-      { model | unit <- Just (centerUnit model.width head), units <- tail }
+      { model | unit <- head, units <- tail }
 
     [] ->
       { model | gameOver <- True }
 
 lockUnitCells : Model -> Model
 lockUnitCells model =
-  let
-    unitCells = Maybe.withDefault [] (Maybe.map .cells model.unit)
-  in
-    { model |
-      unit <- Nothing
-    , filled <- model.filled ++ unitCells
-    }
+  { model | filled <- model.unit.cells ++ model.filled }
 
-update : Command -> Model -> Model
-update command model =
-  if model.gameOver
-  then model
+applyCommand : Command -> Model -> Model
+applyCommand command model =
+  if model.gameOver then
+    model
   else
-  case model.unit of
-    Nothing ->
-      update command (spawnNextUnit model)
+    let
+      newModel =
+        { model | unit <- commandUnit command model.unit }
+    in
+      if isValidPosition newModel then
+        newModel
+      else
+        (spawnNextUnit << lockUnitCells) model
 
-    Just unit ->
-      let
-        newModel =
-          { model | unit <- Just (commandUnit command unit) }
-      in
-        if isValidPosition newModel then
-          newModel
-        else
-          (spawnNextUnit << lockUnitCells) model
-
-updateOnce : Model -> Model
-updateOnce model =
+update : Model -> Model
+update model =
   case model.commands of
     (command :: tail) ->
-      update command { model | commands <- tail }
+      applyCommand command { model | commands <- tail }
 
     [] ->
       model
@@ -159,7 +164,7 @@ boardView model =
       List.map (cellView "yellow") (model.filled)
 
     unitCellsViews =
-      Maybe.withDefault [] (Maybe.map unitView model.unit)
+      unitView model.unit
   in
     div [class "board"]
       (allCellsViews ++ filledCellsViews ++ unitCellsViews)

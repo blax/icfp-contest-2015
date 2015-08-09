@@ -52,18 +52,18 @@ toSimulation model =
   in
     Input.parse model.input `andThen` \input ->
     Output.parse model.output `andThen` \outputs ->
+    List.head input.units `andThen` \firstUnit ->
     List.head outputs `andThen` \output ->
     Command.decodeList output.solution `andThen` \commands ->
-
-    Just
-      { width = input.width
-      , height = input.height
-      , filled = input.filled
-      , unit = Nothing
-      , units = input.units
-      , commands = commands
-      , gameOver = False
-      }
+      let attributes =
+        { width = input.width
+        , height = input.height
+        , filled = input.filled
+        , units = input.units
+        , commands = commands
+        }
+      in
+        Just (Simulation.init attributes)
 
 -- update
 
@@ -77,11 +77,10 @@ update action model =
       { model | output <- s }
 
     Submit ->
-      --{ model | simulation <- Maybe.map Simulation.updateAll (toSimulation model) }
       { model | simulation <- toSimulation model }
 
     Tick ->
-      { model | simulation <- Maybe.map Simulation.updateOnce model.simulation }
+      { model | simulation <- Maybe.map Simulation.update model.simulation }
 
 -- view
 
