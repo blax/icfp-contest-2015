@@ -1,4 +1,4 @@
-module Simulator.Simulation (Model, init, update, view, applyCommands) where
+module Simulator.Simulation (Model, update, view, updateAll) where
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -7,51 +7,15 @@ import Simulator.Command exposing (..)
 import Simulator.Cell exposing (..)
 import Simulator.Unit exposing (..)
 
-type InputCell = InputCell (Int, Int)
-
 type alias Action = ()
 
 type alias Model =
   { width : Int
   , height : Int
   , filled : List Cell
-  , unit : Unit
+  , unit : Maybe Unit
+  , units : List Unit
   , commands : List Command
-  }
-
-sgn : Int -> Int
-sgn x =
-  if x < 0 then -1 else 1
-
-fromInputCell : InputCell -> Cell
-fromInputCell (InputCell (x, y)) =
-  (x - floor (toFloat y / 2), y)
-
-toInputCell : Cell -> InputCell
-toInputCell (x, y) =
-  InputCell (x + floor (toFloat y / 2), y)
-
-inputCommands = [Move SE, Rotate CCW]
-
-inputModel =
-  { width = 15
-  , height = 15
-  , filled = []
-  , unit = { cells = [InputCell (0, 2)], pivot = InputCell (0, 0) }
-  , commands = []
-  }
-
-fromInputUnit inputUnit =
-  { inputUnit |
-    cells <- (List.map fromInputCell inputUnit.cells)
-  , pivot <- fromInputCell inputUnit.pivot
-  }
-
-init : Model
-init =
-  { inputModel |
-    filled <- List.map fromInputCell inputModel.filled
-  , unit <- fromInputUnit inputModel.unit
   }
 
 product : List a -> List b -> List (a, b)
@@ -74,15 +38,24 @@ allCells model =
 
 -- update
 
-applyCommand command model =
-  { model | unit <- commandUnit command model.unit }
+update : Command -> Model -> Model
+update command model =
+  case model.unit of
+    Nothing ->
+      case model.units of
+        (head :: tail) ->
+          update command
+            { model | unit <- Just (centerUnit model.width head), units <- tail }
 
-applyCommands model =
-  List.foldl applyCommand model model.commands
+        [] ->
+          model -- FIXME handle game over properly
 
-update : Action -> Model -> Model
-update action model =
-  model
+    Just unit ->
+      { model | unit <- Just (commandUnit command unit) }
+
+updateAll : Model -> Model
+updateAll model =
+  List.foldl update model model.commands
 
 -- view
 
@@ -120,6 +93,9 @@ pivotView pivot =
     ]
     []
 
+unitView unit =
+  (List.map (cellView "violet") unit.cells) ++ [pivotView unit.pivot]
+
 boardView : Model -> Html
 boardView model =
   let
@@ -129,8 +105,8 @@ boardView model =
     filledCellsViews =
       List.map (cellView "yellow") (model.filled)
 
-    unitCellsViews unit =
-      (List.map (cellView "violet") unit.cells) ++ [pivotView unit.pivot]
+    unitCellsViews =
+      Maybe.withDefault [] (Maybe.map unitView model.unit)
   in
     div [class "board"]
-      (allCellsViews ++ filledCellsViews ++ unitCellsViews model.unit)
+      (allCellsViews ++ filledCellsViews ++ unitCellsViews)

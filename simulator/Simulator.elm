@@ -49,8 +49,6 @@ toSimulation model =
   in
     Input.parse model.input `andThen` \input ->
     Output.parse model.output `andThen` \outputs ->
-    List.head input.units `andThen` \unit ->
-    List.tail input.units `andThen` \units ->
     List.head outputs `andThen` \output ->
     Command.decodeList output.solution `andThen` \commands ->
 
@@ -58,7 +56,8 @@ toSimulation model =
       { width = input.width
       , height = input.height
       , filled = input.filled
-      , unit = unit
+      , unit = Nothing
+      , units = input.units
       , commands = commands
       }
 
@@ -73,7 +72,7 @@ update action model =
       { model | output <- s }
 
     Submit ->
-      { model | simulation <- Maybe.map Simulation.applyCommands (toSimulation model) }
+      { model | simulation <- Maybe.map Simulation.updateAll (toSimulation model) }
 
 -- view
 

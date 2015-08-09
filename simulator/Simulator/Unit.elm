@@ -26,3 +26,34 @@ commandUnit command =
   case command of
     Move m -> moveUnit m
     Rotate r -> rotateUnit r
+
+fromInputCellsUnit inputUnit =
+  { inputUnit |
+    cells <- (List.map fromInputCell inputUnit.cells)
+  , pivot <- fromInputCell inputUnit.pivot
+  }
+
+centerUnit : Int -> Unit -> Unit
+centerUnit boardWidth unit =
+  let
+    distance = (boardWidth - (unitWidth unit)) // 2
+    command  = (if distance < 0 then Move W else Move E)
+    commands = List.repeat (abs distance) command
+  in
+    List.foldl commandUnit unit commands
+
+unitWidth : Unit -> Int
+unitWidth unit =
+  let
+    inputCells =
+      List.map toInputCell unit.cells
+
+    toCoords =
+      \(InputCell coords) -> coords
+
+    xs =
+      (List.map (fst << toCoords)) inputCells
+
+    ((Just min), (Just max)) = (List.minimum xs, List.maximum xs)
+  in
+    max - min

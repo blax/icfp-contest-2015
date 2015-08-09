@@ -4,6 +4,11 @@ import Simulator.Command exposing (..)
 
 type alias Cell = (Int, Int)
 
+-- InputCells are cells in the coordinate system defined in the task.
+-- Regular cells use the coordinates with non-perpendicular axes.
+
+type InputCell = InputCell (Int, Int)
+
 x : Cell -> Int
 x = fst
 
@@ -33,8 +38,10 @@ rotateCell rotation pivot cell =
   in
     (dx' + px, dy' + py)
 
--- private
+fromInputCell : InputCell -> Cell
+fromInputCell (InputCell (x, y)) =
+  (x - floor (toFloat y / 2), y)
 
-isEven : Int -> Bool
-isEven n =
-  n % 2 == 0
+toInputCell : Cell -> InputCell
+toInputCell (x, y) =
+  InputCell (x + floor (toFloat y / 2), y)
