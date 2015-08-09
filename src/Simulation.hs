@@ -2,6 +2,7 @@ module Simulation where
 
 import InputTypes
 import LCGen (mkLCGen, randoms)
+import Data.List (nub)
 
 data MoveCommand = E | W | SE | SW
 data RotationCommand = CW | CCW
@@ -70,6 +71,46 @@ rotateCell pivot direction Cell { cX = x, cY = y } =
     (newX, newY) = case direction of
       CW -> (-1 * dY, dX + dY)
       CCW -> (dX + dY, -1 * dX)
+
+-- this function is invoked when unit becomes locked
+-- it should:
+-- 1. add members of the current unit to list of full fields
+-- 2. clear full rows
+-- 3. spawn the next unit
+updateBoard :: GameState -> GameState
+updateBoard = spawnNewUnit . clearRows . materializeCurrentUnit
+
+materializeCurrentUnit :: GameState -> GameState
+materializeCurrentUnit state = state { gFilled = newFilled }
+  where
+    newFilled = nub $ (gFilled state) ++ (uMembers . gCurrentUnit $ state)
+
+clearRows :: GameState -> GameState
+clearRows state = state { gFilled = newFilled } where
+  newFilled = clearFieldsForFullRows filledFields width changedYs
+  changedYs = map cY (uMembers . gCurrentUnit $ state)
+  filledFields = gFilled state
+  width = gWidth state
+
+clearFieldsForFullRows :: [Cell] -> Int -> [Int] -> [Cell]
+clearFieldsForFullRows fields _ [] = fields
+clearFieldsForFullRows fields width (y:ys)
+  | rowIsFull = clearFieldsForFullRows newFilled width (y:ys)
+  | otherwise = clearFieldsForFullRows fields width ys
+  where
+    rowIsFull = (length filledInThisRow) == width
+    filledInThisRow = filter matchingRow fields
+    newFilled = map moveIfAbove $ filter (not . matchingRow) fields
+    matchingRow c = (cY c) == y
+    moveIfAbove cell
+      | odd y && (cY cell) < y = moveCell SE cell
+      | even y && (cY cell) < y = moveCell SW cell
+      | otherwise = cell
+
+spawnNewUnit :: GameState -> GameState
+spawnNewUnit state = state { gCurrentUnit = newCurrentUnit, gNextUnits = newNextUnits }
+  where
+    (newCurrentUnit : newNextUnits) = gNextUnits state
 
 -- I am not very proud of this function, but enough is enough
 centerUnit :: Int -> Unit -> Unit
