@@ -29,6 +29,9 @@ initialState i seed =
     unitIndexes = take (iSourceLength i) $ randoms $ mkLCGen seed
     units = map (centerUnit $ iWidth i) (iUnits i)
 
+applyCommands :: GameState -> [Command] -> GameState
+applyCommands = foldl' (flip applyCommand)
+
 applyCommand :: GameState -> Command -> GameState
 applyCommand state command
   | isValid stateWithCommand = stateWithCommand
