@@ -8,21 +8,30 @@ data MoveCommand = E | W | SE | SW
 data RotationCommand = CW | CCW
 data Command = Move MoveCommand | Rotate RotationCommand
 
-data GameState = GameState { gCurrentUnit   :: Unit
-                           , gNextUnits     :: [Unit]
-                           , gFilled        :: [Cell]
-                           , gWidth         :: Int
-                           , gHeight        :: Int
-                           }
-                 deriving Show
+data GameState =
+    GameState { gCurrentUnit         :: Unit
+              , gNextUnits           :: [Unit]
+              , gFilled              :: [Cell]
+              , gWidth               :: Int
+              , gHeight              :: Int
+              , gScore               :: Int
+              , gGameOver            :: Bool
+              , gLinesCleared        :: Int
+              , gPrevLinesCleared    :: Int
+              }
+    deriving Show
 
 initialState :: Input -> Int -> GameState
 initialState i seed =
-    GameState { gCurrentUnit = currentUnit
-              , gNextUnits = nextUnits
-              , gFilled = iFilled i
-              , gWidth = iWidth i
-              , gHeight = iHeight i
+    GameState { gCurrentUnit         = currentUnit
+              , gNextUnits           = nextUnits
+              , gFilled              = iFilled i
+              , gWidth               = iWidth i
+              , gHeight              = iHeight i
+              , gScore               = 0
+              , gGameOver            = False
+              , gLinesCleared        = 0
+              , gPrevLinesCleared    = 0
               }
   where
     (currentUnit:nextUnits) = map getUnit unitIndexes
@@ -35,6 +44,7 @@ applyCommands = foldl' applyCommand
 
 applyCommand :: GameState -> Command -> GameState
 applyCommand state command
+  | gGameOver state = state
   | isValid stateWithCommand = stateWithCommand
   | otherwise = updateBoard state
   where
@@ -87,36 +97,66 @@ updateBoard :: GameState -> GameState
 updateBoard = spawnNewUnit . clearRows . materializeCurrentUnit
 
 materializeCurrentUnit :: GameState -> GameState
-materializeCurrentUnit state = state { gFilled = newFilled }
+materializeCurrentUnit state =
+    state { gFilled = newFilled}
   where
-    newFilled = (gFilled state) ++ (uMembers . gCurrentUnit $ state)
+    newFilled = (gFilled state) ++ currentUnitCells
+    currentUnitCells = uMembers . gCurrentUnit $ state
 
 clearRows :: GameState -> GameState
-clearRows state = state { gFilled = newFilled } where
-  newFilled = clearFieldsForFullRows filledFields width changedYs
-  changedYs = map cY (uMembers . gCurrentUnit $ state)
-  filledFields = gFilled state
-  width = gWidth state
-
-clearFieldsForFullRows :: [Cell] -> Int -> [Int] -> [Cell]
-clearFieldsForFullRows fields _ [] = fields
-clearFieldsForFullRows fields width (y:ys)
-  | rowIsFull = clearFieldsForFullRows newFilled width (y:ys)
-  | otherwise = clearFieldsForFullRows fields width ys
+clearRows state =
+    state { gFilled = newFilled, gLinesCleared = length fullRows }
   where
-    rowIsFull = (length filledInThisRow) == width
-    filledInThisRow = filter matchingRow fields
+    newFilled = clearFieldsInRows filledFields fullRows
+    fullRows = filter isFullRow changedYs
+    isFullRow y = (length $ filledInRow y) == width
+    filledInRow y = filter (\c -> y == cY c) filledFields
+    filledFields = gFilled state
+    changedYs = map cY (uMembers . gCurrentUnit $ state)
+    width = gWidth state
+
+clearFieldsInRows :: [Cell] -> [Int] -> [Cell]
+clearFieldsInRows fields [] = fields
+clearFieldsInRows fields (y:ys) =
+    clearFieldsInRows newFilled adjustedYs
+  where
+    adjustedYs = map (adjustIfAbove y) ys
     newFilled = map moveIfAbove $ filter (not . matchingRow) fields
     matchingRow c = (cY c) == y
     moveIfAbove cell
       | odd y && (cY cell) < y = moveCell SE cell
       | even y && (cY cell) < y = moveCell SW cell
       | otherwise = cell
+    adjustIfAbove t r
+      | r < t      = r+1
+      | otherwise  = r
 
 spawnNewUnit :: GameState -> GameState
-spawnNewUnit state = state { gCurrentUnit = newCurrentUnit, gNextUnits = newNextUnits }
+spawnNewUnit state
+  | noNextUnits || cantSpawn = gameOver
+  | otherwise = newState
   where
+    newState = state { gCurrentUnit = newCurrentUnit
+                     , gNextUnits = newNextUnits
+                     , gScore = newScore + (gScore state)
+                     , gPrevLinesCleared = gLinesCleared state
+                     , gLinesCleared = 0 }
+    gameOver = state { gGameOver = True
+                     , gScore = newScore + (gScore state)
+                     , gPrevLinesCleared = gLinesCleared state
+                     , gLinesCleared = 0 }
+    newScore = moveScore unitSize (gLinesCleared state) (gPrevLinesCleared state)
+    unitSize = (length $ uMembers . gCurrentUnit $ state)
     (newCurrentUnit : newNextUnits) = gNextUnits state
+    noNextUnits = null $ gNextUnits state
+    cantSpawn = (not . isValid) newState
+
+moveScore :: Int -> Int -> Int -> Int
+moveScore size ls ls_old = points + line_bonus where
+  points = size + 50 * (1 + ls) * ls
+  line_bonus
+    | ls_old > 1 = ((ls_old - 1) * points) `div` 10
+    | otherwise = 0
 
 -- I am not very proud of this function, but enough is enough
 centerUnit :: Int -> Unit -> Unit
