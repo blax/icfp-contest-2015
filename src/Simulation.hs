@@ -83,7 +83,7 @@ updateBoard = spawnNewUnit . clearRows . materializeCurrentUnit
 materializeCurrentUnit :: GameState -> GameState
 materializeCurrentUnit state = state { gFilled = newFilled }
   where
-    newFilled = nub $ (gFilled state) ++ (uMembers . gCurrentUnit $ state)
+    newFilled = (gFilled state) ++ (uMembers . gCurrentUnit $ state)
 
 clearRows :: GameState -> GameState
 clearRows state = state { gFilled = newFilled } where
