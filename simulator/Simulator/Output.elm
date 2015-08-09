@@ -31,6 +31,3 @@ commandCodes : Decoder (List CommandCode)
 commandCodes =
   map (String.toList) string
   -- FIXME skip \t, \n, \r
-
-sample =
-  """[{"problemId":1234,"seed":1234,"tag":"foo","solution":"iiiiiiiimmiiiiiimimmiiiimimimmimimimimmimimimeemimeeeemimimimimiiiiiimmeemimimimimiimimimmeemimimimmeeeemimimimmiiiiiipmiimimimeeemmimimmemimimimiiiiiimeeemimimimimeeemimimimmiiiimemimimmiiiipimeeemimimmiiiippmeeeeemimimimiiiimmimimeemimimeeeemimimiiiipmeeemmimmiimimmmimimeemimimimmeeemimiiiiipmiiiimmeeemimimiiiipmmiipmmimmiippimemimeeeemimmiipppmeeeeemimimmiimipmeeeemimimiimmeeee"}]"""

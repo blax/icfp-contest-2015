@@ -14,6 +14,7 @@ import Simulator.Output as Output
 import Simulator.Command as Command
 import Simulator.Unit as Unit exposing (Unit)
 import Simulator.Random as SimulatorRandom
+import Sample
 
 type Action = InputChange String | OutputChange String | Submit | Tick
 
@@ -25,7 +26,7 @@ type alias Model =
 
 main =
   let
-    ticks = Signal.map (\_ -> Just Tick) (Time.every 200)
+    ticks = Signal.map (\_ -> Just Tick) (Time.every 50)
 
     actions =
       Signal.mailbox Nothing
@@ -44,8 +45,8 @@ main =
 -- model
 
 initialModel =
-  { input = Input.sample
-  , output = Output.sample
+  { input = Sample.input
+  , output = Sample.output
   , simulation = Nothing
   }
 
