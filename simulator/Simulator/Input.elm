@@ -15,9 +15,9 @@ type alias Input =
   , sourceLength: Int
   }
 
-parse : String -> Result String Input
+parse : String -> Maybe Input
 parse inputString =
-  decodeString decoder inputString
+  Result.toMaybe (decodeString decoder inputString)
 
 decoder : Decoder Input
 decoder =

@@ -11,9 +11,9 @@ type alias Output =
   , solution: List CommandCode
   }
 
-parse : String -> Result String (List Output)
+parse : String -> Maybe (List Output)
 parse outputString =
-  decodeString decoder outputString
+  Result.toMaybe (decodeString decoder outputString)
 
 decoder : Decoder (List Output)
 decoder =
@@ -30,6 +30,7 @@ entry =
 commandCodes : Decoder (List CommandCode)
 commandCodes =
   map (String.toList) string
+  -- FIXME skip \t, \n, \r
 
 sample =
   """[{"problemId":1234,"seed":1234,"tag":"foo","solution":"iiiiiiimimiiiiiimmimiiiimimimmimimimimmeemmimimiimmmmimmimiimimimmimmimeee mmmimimmimeeemiimiimimimiiiipimiimimmmmeemimeemimimimmmmemimmimmmiiimmmiii piimiiippiimmmeemimiipimmimmipppimmimeemeemimiieemimmmm"}]"""

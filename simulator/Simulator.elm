@@ -8,6 +8,7 @@ import Html.Events exposing (..)
 import Simulator.Simulation as Simulation
 import Simulator.Input as Input
 import Simulator.Output as Output
+import Simulator.Command as Command
 
 type Action = InputChange String | OutputChange String | Submit
 
@@ -44,26 +45,22 @@ initialModel =
 toSimulation : Model -> Maybe Simulation.Model
 toSimulation model =
   let
-    input : Result String Input.Input
-    input =
-      Input.parse model.input
-
-    output : Result String (List Output.Output)
-    output =
-      Output.parse model.output
-
-    toSimulationModel : Input.Input -> List Output.Output -> Simulation.Model
-    toSimulationModel input outputs =
-      let
-        (unit, units) = (\(head :: tail) -> (head, tail)) input.units -- hackish
-      in
-        { width = input.width
-        , height = input.height
-        , filled = input.filled
-        , unit = unit
-        }
+    andThen = Maybe.andThen
   in
-    Result.toMaybe (Result.map2 toSimulationModel input output)
+    Input.parse model.input `andThen` \input ->
+    Output.parse model.output `andThen` \outputs ->
+    List.head input.units `andThen` \unit ->
+    List.tail input.units `andThen` \units ->
+    List.head outputs `andThen` \output ->
+    Command.decodeList output.solution `andThen` \commands ->
+
+    Just
+      { width = input.width
+      , height = input.height
+      , filled = input.filled
+      , unit = unit
+      , commands = commands
+      }
 
 -- update
 
@@ -76,7 +73,7 @@ update action model =
       { model | output <- s }
 
     Submit ->
-      { model | simulation <- toSimulation model }
+      { model | simulation <- Maybe.map Simulation.applyCommands (toSimulation model) }
 
 -- view
 

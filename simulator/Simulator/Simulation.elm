@@ -1,4 +1,4 @@
-module Simulator.Simulation (Model, init, update, view) where
+module Simulator.Simulation (Model, init, update, view, applyCommands) where
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -16,6 +16,7 @@ type alias Model =
   , height : Int
   , filled : List Cell
   , unit : Unit
+  , commands : List Command
   }
 
 sgn : Int -> Int
@@ -37,6 +38,7 @@ inputModel =
   , height = 15
   , filled = []
   , unit = { cells = [InputCell (0, 2)], pivot = InputCell (0, 0) }
+  , commands = []
   }
 
 fromInputUnit inputUnit =
@@ -74,6 +76,9 @@ allCells model =
 
 applyCommand command model =
   { model | unit <- commandUnit command model.unit }
+
+applyCommands model =
+  List.foldl applyCommand model model.commands
 
 update : Action -> Model -> Model
 update action model =
