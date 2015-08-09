@@ -72,7 +72,13 @@ spawnNextUnit : Model -> Model
 spawnNextUnit model =
   case model.units of
     (head :: tail) ->
-      { model | unit <- head, units <- tail }
+      let
+        newModel = { model | unit <- head, units <- tail }
+      in
+        if isValidPosition newModel then
+          newModel
+        else
+          { newModel | gameOver <- True }
 
     [] ->
       { model | gameOver <- True }
@@ -129,7 +135,7 @@ applyCommand command model =
       if isValidPosition newModel then
         newModel
       else
-        (clearFullRows << spawnNextUnit << lockUnitCells) model
+        (spawnNextUnit << clearFullRows << lockUnitCells) model
 
 update : Model -> Model
 update model =
