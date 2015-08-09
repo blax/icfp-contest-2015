@@ -61,7 +61,6 @@ moveCellBy :: Int -> Int -> Cell -> Cell
 moveCellBy dX dY Cell { cX = x, cY = y } =
   Cell { cX = (x+dX), cY = (y+dY) }
 
-
 rotateCell :: Cell -> RotationCommand -> Cell -> Cell
 rotateCell pivot direction Cell { cX = x, cY = y } =
     Cell { cX = (newX + pX), cY = (newY + pY) }
@@ -81,9 +80,26 @@ centerUnit width unit =
     newPivot = centeringMove $ uPivot unit
     centeringMove = moveCellBy delta 0
     delta = (minRightDistance - minLeftDistance) `div` 2
-    minRightDistance = minimum $ map (rightDistance width) $ uMembers unit
-    minLeftDistance = minimum $ map (leftDistance) $ uMembers unit
-    leftDistance Cell {cX = x, cY = y} =
-        x + (y `quot` 2)
-    rightDistance w Cell {cX = x, cY = y} =
-        (w-1) - x - (y `quot` 2)
+    minRightDistance = minimum $ map rightDistance $ uMembers unit
+    minLeftDistance = minimum $ map leftDistance $ uMembers unit
+    leftDistance c = fst $ unskewedCoords c
+    rightDistance c = (width-1) - (fst $ unskewedCoords c)
+
+isValid :: GameState -> Bool
+isValid state = all validCell $ (uMembers . gCurrentUnit) state
+  where
+    validCell c = inBounds c && collisionFree c
+    inBounds c = checkBounds c (gWidth state) (gHeight state)
+    collisionFree c = notElem c $ gFilled state
+
+checkBounds :: Cell -> Int -> Int -> Bool
+checkBounds cell width height =
+    (x >= 0) && (x < width) && (y >= 0) && (y < height)
+  where
+    (x,y) = unskewedCoords cell
+
+-- hexagonal coordinate system is very convinient
+-- but it has one downside – x coordinates are skewed
+-- so we need to normalize before checking vs bounds
+unskewedCoords :: Cell -> (Int, Int)
+unskewedCoords Cell {cX = x, cY = y} = (x + (y `quot` 2), y)
