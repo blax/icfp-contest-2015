@@ -2,6 +2,8 @@ module Simulator.Simulation (Model, init, update, view) where
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Util exposing (isEven)
+import Util.List as ListUtil exposing (range)
 
 import Simulator.Command exposing (..)
 import Simulator.Cell exposing (..)
@@ -38,20 +40,10 @@ init attributes =
   in
     model
 
-product : List a -> List b -> List (a, b)
-product xs ys =
-  let product' xs ys =
-    case xs of
-      x::xs' -> (List.map (\y -> (x, y)) ys)::(product' xs' ys)
-      []     -> []
-  in List.concat (product' xs ys)
-
 allCells model =
   let
-    range a b =
-      if a < b then a :: range (a + 1) b else []
     pairs =
-      product (range 0 model.width) (range 0 model.height)
+      ListUtil.product (range 0 model.width) (range 0 model.height)
   in
     List.map (fromInputCell << InputCell) pairs
 
@@ -89,6 +81,42 @@ lockUnitCells : Model -> Model
 lockUnitCells model =
   { model | filled <- model.unit.cells ++ model.filled }
 
+clearFullRow : Model -> Int -> Model
+clearFullRow model row =
+  let
+    skipCellsFromRow row cells =
+      List.filter (\(x, y) -> y /= row) cells
+
+    shiftDownCell (x, y) =
+      moveCell (if isEven y then SE else SW) (x, y)
+
+    shiftDownCellsAboveRow row cells =
+      List.map (\(x, y) -> if y < row then shiftDownCell (x, y) else (x, y)) cells
+
+    newFilledCells =
+      ((shiftDownCellsAboveRow row) << (skipCellsFromRow row)) model.filled
+  in
+    { model | filled <- newFilledCells }
+
+clearFullRows : Model -> Model
+clearFullRows model =
+  let
+    rows =
+      range 0 (model.height - 1)
+
+    isFullRow row =
+      model.width == List.length (List.filter (\(x, y) -> y == row) model.filled)
+
+    firstFullRow =
+      ListUtil.find isFullRow rows
+  in
+    case firstFullRow of
+      Just row ->
+        clearFullRows (clearFullRow model row)
+
+      Nothing ->
+        model
+
 applyCommand : Command -> Model -> Model
 applyCommand command model =
   if model.gameOver then
@@ -101,7 +129,7 @@ applyCommand command model =
       if isValidPosition newModel then
         newModel
       else
-        (spawnNextUnit << lockUnitCells) model
+        (clearFullRows << spawnNextUnit << lockUnitCells) model
 
 update : Model -> Model
 update model =

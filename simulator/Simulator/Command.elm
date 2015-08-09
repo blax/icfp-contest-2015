@@ -1,6 +1,7 @@
 module Simulator.Command where
 
 import Util.Maybe as MaybeUtil
+import Util.List as ListUtil
 
 type Move = E | W | SE | SW
 
@@ -22,12 +23,8 @@ decode code =
       , (['k', 's', 't', 'u', 'w', 'x'],  Rotate CCW)
       ]
 
-    first : (a -> Bool) -> List a -> Maybe a
-    first predicate =
-      List.head << List.filter predicate
-
     maybeMappingRow =
-      first (\(chars, command) -> List.member code chars) mapping
+      ListUtil.find (\(chars, command) -> List.member code chars) mapping
 
     maybeCommand =
       Maybe.map snd maybeMappingRow
