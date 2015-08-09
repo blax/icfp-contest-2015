@@ -2,7 +2,6 @@ module Simulation where
 
 import InputTypes
 import LCGen (mkLCGen, randoms)
-import Data.List (nub)
 
 data MoveCommand = E | W | SE | SW
 data RotationCommand = CW | CCW
@@ -31,10 +30,13 @@ initialState i seed =
     units = map (centerUnit $ iWidth i) (iUnits i)
 
 applyCommand :: GameState -> Command -> GameState
-applyCommand state command = state { gCurrentUnit = newCurrentUnit }
+applyCommand state command
+  | isValid stateWithCommand = stateWithCommand
+  | otherwise = updateBoard state
   where
     newCurrentUnit = applyCommandToUnit currentUnit command
     currentUnit = gCurrentUnit state
+    stateWithCommand = state { gCurrentUnit = newCurrentUnit }
 
 applyCommandToUnit :: Unit -> Command -> Unit
 applyCommandToUnit unit (Move direction) =
