@@ -45,3 +45,8 @@ fromInputCell (InputCell (x, y)) =
 toInputCell : Cell -> InputCell
 toInputCell (x, y) =
   InputCell (x + floor (toFloat y / 2), y)
+
+toInputCellCoords cell =
+  let unpack = \(InputCell coords) -> coords
+  in
+    unpack (toInputCell cell)

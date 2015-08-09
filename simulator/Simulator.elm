@@ -62,6 +62,7 @@ toSimulation model =
       , unit = Nothing
       , units = input.units
       , commands = commands
+      , gameOver = False
       }
 
 -- update

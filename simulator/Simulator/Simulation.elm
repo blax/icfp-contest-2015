@@ -16,6 +16,7 @@ type alias Model =
   , unit : Maybe Unit
   , units : List Unit
   , commands : List Command
+  , gameOver : Bool
   }
 
 product : List a -> List b -> List (a, b)
@@ -38,20 +39,64 @@ allCells model =
 
 -- update
 
+isValidPosition : Model -> Bool
+isValidPosition model =
+  let
+    colliding unit =
+      List.any (\cell -> List.member cell unit.cells) model.filled
+
+    cellWithinBounds cell =
+      let coords = toInputCellCoords cell
+      in
+        fst coords >= 0 &&
+        fst coords < model.width &&
+        snd coords < model.height
+
+    withinBounds unit =
+      List.all cellWithinBounds unit.cells
+
+    result unit =
+      withinBounds unit && not (colliding unit)
+  in
+    Maybe.withDefault True (Maybe.map result model.unit)
+
+spawnNextUnit : Model -> Model
+spawnNextUnit model =
+  case model.units of
+    (head :: tail) ->
+      { model | unit <- Just (centerUnit model.width head), units <- tail }
+
+    [] ->
+      { model | gameOver <- True }
+
+lockUnitCells : Model -> Model
+lockUnitCells model =
+  let
+    unitCells = Maybe.withDefault [] (Maybe.map .cells model.unit)
+  in
+    { model |
+      unit <- Nothing
+    , filled <- model.filled ++ unitCells
+    }
+
 update : Command -> Model -> Model
 update command model =
+  if model.gameOver
+  then model
+  else
   case model.unit of
     Nothing ->
-      case model.units of
-        (head :: tail) ->
-          update command
-            { model | unit <- Just (centerUnit model.width head), units <- tail }
-
-        [] ->
-          model -- FIXME handle game over properly
+      update command (spawnNextUnit model)
 
     Just unit ->
-      { model | unit <- Just (commandUnit command unit) }
+      let
+        newModel =
+          { model | unit <- Just (commandUnit command unit) }
+      in
+        if isValidPosition newModel then
+          newModel
+        else
+          (spawnNextUnit << lockUnitCells) model
 
 updateOnce : Model -> Model
 updateOnce model =
@@ -65,7 +110,10 @@ updateOnce model =
 -- view
 
 view address model =
-  boardView model
+  if model.gameOver then
+    div [] [text "Game over!", boardView model]
+  else
+    boardView model
 
 cellCssPosition : Cell -> List (String, String)
 cellCssPosition cell =
