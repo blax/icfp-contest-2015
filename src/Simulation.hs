@@ -1,6 +1,7 @@
 module Simulation where
 
 import InputTypes
+import Data.List (foldl')
 import LCGen (mkLCGen, randoms)
 
 data MoveCommand = E | W | SE | SW
@@ -30,7 +31,7 @@ initialState i seed =
     units = map (centerUnit $ iWidth i) (iUnits i)
 
 applyCommands :: GameState -> [Command] -> GameState
-applyCommands = foldl' (flip applyCommand)
+applyCommands = foldl' applyCommand
 
 applyCommand :: GameState -> Command -> GameState
 applyCommand state command
