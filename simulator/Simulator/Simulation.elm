@@ -18,6 +18,7 @@ type alias Model =
   , unit : Unit
   , units : List Unit
   , commands : List Command
+  , step : Int
   , score : Int
   , prevRowsCleared : Int
   , gameOver : Bool
@@ -45,6 +46,7 @@ init attributes =
     , unit = unit
     , units = units
     , commands = attributes.commands
+    , step = 0
     , score = 0
     , prevRowsCleared = 0
     , gameOver = False
@@ -171,7 +173,10 @@ applyCommand command model =
   else
     let
       newModel =
-        { model | unit <- commandUnit command model.unit }
+        { model |
+          unit <- commandUnit command model.unit
+        , step <- model.step + 1
+        }
     in
       if isValidPosition newModel then
         newModel
@@ -196,6 +201,7 @@ statusView : Model -> Html
 statusView model =
   div []
     [ text ("Score: " ++ (toString model.score) ++ " ")
+    , text ("Step: " ++ (toString model.step) ++ " ")
     , text (if model.gameOver then "Game over!" else "")
     ]
 
