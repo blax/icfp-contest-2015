@@ -4,13 +4,14 @@ import StartApp
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import Time
 
 import Simulator.Simulation as Simulation
 import Simulator.Input as Input
 import Simulator.Output as Output
 import Simulator.Command as Command
 
-type Action = InputChange String | OutputChange String | Submit
+type Action = InputChange String | OutputChange String | Submit | Tick
 
 type alias Model =
   { input : String
@@ -20,6 +21,8 @@ type alias Model =
 
 main =
   let
+    ticks = Signal.map (\_ -> Just Tick) (Time.every 200)
+
     actions =
       Signal.mailbox Nothing
 
@@ -29,8 +32,8 @@ main =
     models =
       Signal.foldp
         (\(Just action) model -> update action model)
-        initialModel
-        actions.signal
+        (update Submit initialModel)
+        (Signal.merge actions.signal ticks)
   in
     Signal.map (view address) models
 
@@ -63,6 +66,7 @@ toSimulation model =
 
 -- update
 
+update : Action -> Model -> Model
 update action model =
   case action of
     InputChange s ->
@@ -72,7 +76,11 @@ update action model =
       { model | output <- s }
 
     Submit ->
-      { model | simulation <- Maybe.map Simulation.updateAll (toSimulation model) }
+      --{ model | simulation <- Maybe.map Simulation.updateAll (toSimulation model) }
+      { model | simulation <- toSimulation model }
+
+    Tick ->
+      { model | simulation <- Maybe.map Simulation.updateOnce model.simulation }
 
 -- view
 

@@ -1,4 +1,4 @@
-module Simulator.Simulation (Model, update, view, updateAll) where
+module Simulator.Simulation (Model, update, view, updateOnce) where
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -53,9 +53,14 @@ update command model =
     Just unit ->
       { model | unit <- Just (commandUnit command unit) }
 
-updateAll : Model -> Model
-updateAll model =
-  List.foldl update model model.commands
+updateOnce : Model -> Model
+updateOnce model =
+  case model.commands of
+    (command :: tail) ->
+      update command { model | commands <- tail }
+
+    [] ->
+      model
 
 -- view
 
