@@ -43,7 +43,7 @@ init attributes =
 allCells model =
   let
     pairs =
-      ListUtil.product (range 0 model.width) (range 0 model.height)
+      ListUtil.product (range 0 (model.width - 1)) (range 0 (model.height - 1))
   in
     List.map (fromInputCell << InputCell) pairs
 

@@ -14,7 +14,7 @@ product xs ys =
 
 range : Int -> Int -> List Int
 range a b =
-  if a < b then a :: range (a + 1) b else []
+  if a <= b then a :: range (a + 1) b else []
 
 find : (a -> Bool) -> List a -> Maybe a
 find predicate =
