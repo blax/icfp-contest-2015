@@ -72,12 +72,12 @@ toSimulation model =
     Input.parse model.input `andThen` \input ->
     Output.parse model.output `andThen` \outputs ->
     List.head input.units `andThen` \firstUnit ->
-    List.head input.sourceSeeds `andThen` \seed ->
     List.head outputs `andThen` \output ->
+    ListUtil.at input.sourceSeeds output.seed `andThen` \seed ->
     Command.decodeList output.solution `andThen` \commands ->
       let
         units =
-          selectRandomUnits input.sourceLength input.units seed
+          selectRandomUnits input.sourceLength input.units output.seed
 
         attributes =
           { width = input.width
