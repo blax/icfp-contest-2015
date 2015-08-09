@@ -22,6 +22,8 @@ executable play_icfp2015
                       attoparsec,
                       base,
                       bytestring,
+                      containers,
+                      logict,
                       microlens,
                       optparse-applicative,
                       random,

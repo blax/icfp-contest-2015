@@ -4,9 +4,9 @@ import InputTypes
 import Data.List (foldl')
 import LCGen (mkLCGen, randoms)
 
-data MoveCommand = E | W | SE | SW
-data RotationCommand = CW | CCW
-data Command = Move MoveCommand | Rotate RotationCommand
+data MoveCommand = E | W | SE | SW deriving (Show, Eq)
+data RotationCommand = CW | CCW deriving (Show, Eq)
+data Command = Move MoveCommand | Rotate RotationCommand deriving (Show, Eq)
 
 data GameState =
     GameState { gCurrentUnit         :: Unit
@@ -18,8 +18,9 @@ data GameState =
               , gGameOver            :: Bool
               , gLinesCleared        :: Int
               , gPrevLinesCleared    :: Int
+              , gLockedState         :: Bool
               }
-    deriving Show
+    deriving (Show, Eq)
 
 initialState :: Input -> Int -> GameState
 initialState i seed =
@@ -32,6 +33,7 @@ initialState i seed =
               , gGameOver            = False
               , gLinesCleared        = 0
               , gPrevLinesCleared    = 0
+              , gLockedState         = False
               }
   where
     (currentUnit:nextUnits) = map getUnit unitIndexes
@@ -50,7 +52,7 @@ applyCommand state command
   where
     newCurrentUnit = applyCommandToUnit currentUnit command
     currentUnit = gCurrentUnit state
-    stateWithCommand = state { gCurrentUnit = newCurrentUnit }
+    stateWithCommand = state { gCurrentUnit = newCurrentUnit, gLockedState = False }
 
 applyCommandToUnit :: Unit -> Command -> Unit
 applyCommandToUnit unit (Move direction) =
@@ -93,6 +95,7 @@ rotateCell pivot direction Cell { cX = x, cY = y } =
 -- 1. add members of the current unit to list of full fields
 -- 2. clear full rows
 -- 3. spawn the next unit
+-- as a side effect, it calculates new score
 updateBoard :: GameState -> GameState
 updateBoard = spawnNewUnit . clearRows . materializeCurrentUnit
 
@@ -140,11 +143,13 @@ spawnNewUnit state
                      , gNextUnits = newNextUnits
                      , gScore = newScore + (gScore state)
                      , gPrevLinesCleared = gLinesCleared state
-                     , gLinesCleared = 0 }
+                     , gLinesCleared = 0
+                     , gLockedState = True }
     gameOver = state { gGameOver = True
                      , gScore = newScore + (gScore state)
                      , gPrevLinesCleared = gLinesCleared state
-                     , gLinesCleared = 0 }
+                     , gLinesCleared = 0
+                     , gLockedState = True }
     newScore = moveScore unitSize (gLinesCleared state) (gPrevLinesCleared state)
     unitSize = (length $ uMembers . gCurrentUnit $ state)
     (newCurrentUnit : newNextUnits) = gNextUnits state

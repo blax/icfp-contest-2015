@@ -21,7 +21,7 @@ data Cell = Cell { cX :: Int
 
 data Unit = Unit { uMembers :: [Cell]
                  , uPivot   :: Cell }
-             deriving Show
+             deriving (Show, Eq)
 
 instance A.FromJSON Input where
   parseJSON (A.Object v) = Input <$> v A..: "id"

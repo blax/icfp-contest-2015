@@ -2,11 +2,13 @@ module Main where
 
 import Data.Aeson (decode)
 import qualified Data.ByteString.Lazy as BL
-import Options.Applicative ((<$>), (<*>), (<>), Parser, ParserInfo)
+import Options.Applicative ((<>), Parser, ParserInfo)
 import qualified Options.Applicative as O
-
+import Data.List (nub)
 import InputTypes
 import InputPresenter as IP
+import Solver as SO
+import Simulation as S
 
 data Options = Options {
     optInputFiles :: [FilePath],
@@ -51,8 +53,13 @@ withInfo parser info =
 
 printProblemFromFile :: FilePath -> IO ()
 printProblemFromFile f = do
-  Just input <- decode <$> BL.readFile f :: IO (Maybe Input)
-  IP.showProblem input
+    Just input <- decode <$> BL.readFile f :: IO (Maybe Input)
+    IP.showProblem input
+    let state1 = S.initialState input (head . iSourceSeeds $ input)
+        lockedPoints = SO.lowLevelSolve state1
+    mapM_ print lockedPoints
+    print . length . nub $ lockedPoints
+
 
 main :: IO ()
 main = do
