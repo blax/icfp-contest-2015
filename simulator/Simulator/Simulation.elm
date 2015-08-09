@@ -18,27 +18,37 @@ type alias Model =
   , unit : Unit
   , units : List Unit
   , commands : List Command
+  , score : Int
+  , prevRowsCleared : Int
   , gameOver : Bool
   }
 
+type alias InitAttributes =
+  { width : Int
+  , height : Int
+  , filled : List Cell
+  , units : List Unit
+  , commands : List Command
+  }
+
+init : InitAttributes -> Model
 init attributes =
   let
     centeredUnits =
       List.map (centerUnit attributes.width) attributes.units
 
     (unit :: units) = centeredUnits
-
-    fixedAttributes =
-      { attributes | units <- units }
-
-    almostModel =
-      { fixedAttributes | gameOver = False }
-
-    model : Model
-    model =
-      { almostModel | unit = unit }
   in
-    model
+    { width = attributes.width
+    , height = attributes.height
+    , filled = attributes.filled
+    , unit = unit
+    , units = units
+    , commands = attributes.commands
+    , score = 0
+    , prevRowsCleared = 0
+    , gameOver = False
+    }
 
 allCells model =
   let
@@ -104,17 +114,25 @@ clearFullRow model row =
   in
     { model | filled <- newFilledCells }
 
-clearFullRows : Model -> Model
-clearFullRows model =
+filterFullRows : Model -> List Int
+filterFullRows model =
   let
     rows =
       range 0 (model.height - 1)
 
-    isFullRow row =
-      model.width == List.length (List.filter (\(x, y) -> y == row) model.filled)
+    cellsInRow row =
+      List.filter (\(x, y) -> y == row) model.filled
 
+    isFullRow row =
+      List.length (cellsInRow row) == model.width
+  in
+    List.filter (isFullRow) rows
+
+clearFullRows : Model -> Model
+clearFullRows model =
+  let
     firstFullRow =
-      ListUtil.find isFullRow rows
+      List.head (filterFullRows model)
   in
     case firstFullRow of
       Just row ->
@@ -122,6 +140,29 @@ clearFullRows model =
 
       Nothing ->
         model
+
+updateScore : Model -> Model
+updateScore model =
+  let
+    rowsCleared =
+      List.length (filterFullRows model)
+
+    unitSize =
+      List.length model.unit.cells
+
+    points =
+      unitSize + 50 * (1 + rowsCleared) * rowsCleared
+
+    bonus =
+      if model.prevRowsCleared > 1 then
+        floor (toFloat ((model.prevRowsCleared - 1) * points) / 10)
+      else
+        0
+  in
+    { model |
+      score <- model.score + points + bonus
+    , prevRowsCleared <- rowsCleared
+    }
 
 applyCommand : Command -> Model -> Model
 applyCommand command model =
@@ -135,7 +176,7 @@ applyCommand command model =
       if isValidPosition newModel then
         newModel
       else
-        (spawnNextUnit << clearFullRows << lockUnitCells) model
+        (spawnNextUnit << clearFullRows << updateScore << lockUnitCells) model
 
 update : Model -> Model
 update model =
@@ -149,10 +190,14 @@ update model =
 -- view
 
 view address model =
-  if model.gameOver then
-    div [] [text "Game over!", boardView model]
-  else
-    boardView model
+  div [] [statusView model, boardView model]
+
+statusView : Model -> Html
+statusView model =
+  div []
+    [ text ("Score: " ++ (toString model.score) ++ " ")
+    , text (if model.gameOver then "Game over!" else "")
+    ]
 
 cellCssPosition : Cell -> List (String, String)
 cellCssPosition cell =
