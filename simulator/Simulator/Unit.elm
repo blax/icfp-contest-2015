@@ -56,4 +56,4 @@ unitWidth unit =
 
     ((Just min), (Just max)) = (List.minimum xs, List.maximum xs)
   in
-    max - min
+    max - min + 1
