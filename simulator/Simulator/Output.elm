@@ -33,4 +33,4 @@ commandCodes =
   -- FIXME skip \t, \n, \r
 
 sample =
-  """[{"problemId":1234,"seed":1234,"tag":"foo","solution":"iiiiiiimimiiiiiimmimiiiimimimmimi"}]"""
+  """[{"problemId":1234,"seed":1234,"tag":"foo","solution":"iiiiiiimimiiiiiimmimiiiimimimmimimimimmeemmimimiimmmmimmimiimimimmimmimeee mmmimimmimeeemiimiimimimiiiipimiimimmmmeemimeemimimimmmmemimmimmmiiimmmiii piimiiippiimmmeemimiipimmimmipppimmimeemeemimiieemimmmm"}]"""
