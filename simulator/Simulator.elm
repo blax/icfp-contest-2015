@@ -5,11 +5,15 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Time
+import Util.List as ListUtil
+import Util.Maybe as MaybeUtil
 
 import Simulator.Simulation as Simulation
 import Simulator.Input as Input
 import Simulator.Output as Output
 import Simulator.Command as Command
+import Simulator.Unit as Unit exposing (Unit)
+import Simulator.Random as SimulatorRandom
 
 type Action = InputChange String | OutputChange String | Submit | Tick
 
@@ -45,6 +49,20 @@ initialModel =
   , simulation = Nothing
   }
 
+selectRandomUnits : Int -> List Unit -> Int -> List Unit
+selectRandomUnits n availableUnits seed =
+  let
+    randoms =
+      fst (SimulatorRandom.take n (SimulatorRandom.init seed))
+
+    indexes =
+      List.map ((flip (%)) (List.length availableUnits)) randoms
+
+    (Just list) =
+      MaybeUtil.sequence (List.map (ListUtil.at availableUnits) indexes)
+  in
+    list
+
 toSimulation : Model -> Maybe Simulation.Model
 toSimulation model =
   let
@@ -53,15 +71,20 @@ toSimulation model =
     Input.parse model.input `andThen` \input ->
     Output.parse model.output `andThen` \outputs ->
     List.head input.units `andThen` \firstUnit ->
+    List.head input.sourceSeeds `andThen` \seed ->
     List.head outputs `andThen` \output ->
     Command.decodeList output.solution `andThen` \commands ->
-      let attributes =
-        { width = input.width
-        , height = input.height
-        , filled = input.filled
-        , units = input.units
-        , commands = commands
-        }
+      let
+        units =
+          selectRandomUnits input.sourceLength input.units seed
+
+        attributes =
+          { width = input.width
+          , height = input.height
+          , filled = input.filled
+          , units = units
+          , commands = commands
+          }
       in
         Just (Simulation.init attributes)
 

@@ -1,5 +1,7 @@
 module Simulator.Command where
 
+import Util.Maybe as MaybeUtil
+
 type Move = E | W | SE | SW
 
 type Rotation = CW | CCW
@@ -34,19 +36,4 @@ decode code =
 
 decodeList : List CommandCode -> Maybe (List Command)
 decodeList codes =
-  sequence (List.map decode codes)
-
-sequence : List (Maybe a) -> Maybe (List a)
-sequence list =
-  let
-    step maybe results =
-      case results of
-        Just results ->
-          case maybe of
-            Just value -> Just (value :: results)
-            Nothing -> Nothing
-
-        Nothing ->
-          Nothing
-  in
-    List.foldr step (Just []) list
+  MaybeUtil.sequence (List.map decode codes)
