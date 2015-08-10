@@ -2,7 +2,7 @@ module Simulator.Input where
 
 import Json.Decode as Json exposing (..)
 
-import Simulator.Cell exposing (Cell)
+import Simulator.Cell exposing (Cell, fromInputCell, InputCell(..))
 import Simulator.Unit exposing (Unit)
 
 type alias Input =
@@ -32,9 +32,12 @@ decoder =
 
 cell : Decoder Cell
 cell =
-  object2 (,)
-    ("x" := int)
-    ("y" := int)
+  let
+    convert x y = fromInputCell (InputCell (x, y))
+  in
+    object2 convert
+      ("x" := int)
+      ("y" := int)
 
 unit : Decoder Unit
 unit =
