@@ -1,7 +1,8 @@
 module Simulation where
 
 import InputTypes
-import Data.List (foldl')
+import Data.List (foldl', sortBy)
+import Data.Ord
 import LCGen (mkLCGen, randoms)
 
 data MoveCommand = E | W | SE | SW deriving (Show, Eq)
@@ -26,7 +27,7 @@ initialState :: Input -> Int -> GameState
 initialState i seed =
     GameState { gCurrentUnit         = currentUnit
               , gNextUnits           = nextUnits
-              , gFilled              = iFilled i
+              , gFilled              = sortWith cX $ sortWith cY $ iFilled i
               , gWidth               = iWidth i
               , gHeight              = iHeight i
               , gScore               = 0
@@ -110,7 +111,8 @@ clearRows :: GameState -> GameState
 clearRows state =
     state { gFilled = newFilled, gLinesCleared = length fullRows }
   where
-    newFilled = clearFieldsInRows filledFields fullRows
+    newFilled = sortWith cX $ sortWith cY $ clearedFields
+    clearedFields = clearFieldsInRows filledFields fullRows
     fullRows = filter isFullRow changedYs
     isFullRow y = (length $ filledInRow y) == width
     filledInRow y = filter (\c -> y == cY c) filledFields
@@ -195,3 +197,6 @@ checkBounds cell width height =
 -- so we need to normalize before checking vs bounds
 unskewedCoords :: Cell -> (Int, Int)
 unskewedCoords Cell {cX = x, cY = y} = (x + (y `quot` 2), y)
+
+sortWith :: Ord b => (a -> b) -> [a] -> [a]
+sortWith f = map fst . sortBy (comparing snd) . map (\x -> (x, f x))

@@ -56,10 +56,12 @@ printProblemFromFile f = do
     Just input <- decode <$> BL.readFile f :: IO (Maybe Input)
     IP.showProblem input
     let state1 = S.initialState input (head . iSourceSeeds $ input)
-        lockedPoints = take 3 $ SO.solve state1
-        finalStates = map (head . SO.solve . (\(_,_,c) -> c)) lockedPoints
-    mapM_ print $ map (\(a,b,_)-> (a,b)) lockedPoints
-    mapM_ print $ map (\(a,b,_)-> (a,b)) finalStates
+        (steps, finalState) = solve state1 []
+    print steps
+    print $ gScore finalState
+    print $ heuristicScore finalState
+    -- print $ gHeight finalState
+    -- print $ length . gNextUnits $ finalState
 
 
 main :: IO ()
