@@ -4,7 +4,7 @@ import Data.Aeson (decode)
 import qualified Data.ByteString.Lazy as BL
 import Options.Applicative ((<>), Parser, ParserInfo)
 import qualified Options.Applicative as O
-import Data.List (nub)
+-- import Data.List (nub)
 import InputTypes
 import InputPresenter as IP
 import Solver as SO
@@ -56,9 +56,10 @@ printProblemFromFile f = do
     Just input <- decode <$> BL.readFile f :: IO (Maybe Input)
     IP.showProblem input
     let state1 = S.initialState input (head . iSourceSeeds $ input)
-        lockedPoints = SO.lowLevelSolve state1
-    mapM_ print lockedPoints
-    print . length . nub $ lockedPoints
+        lockedPoints = take 3 $ SO.solve state1
+        finalStates = map (head . SO.solve . (\(_,_,c) -> c)) lockedPoints
+    mapM_ print $ map (\(a,b,_)-> (a,b)) lockedPoints
+    mapM_ print $ map (\(a,b,_)-> (a,b)) finalStates
 
 
 main :: IO ()
