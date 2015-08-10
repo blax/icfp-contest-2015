@@ -36,14 +36,14 @@ fromInputCellsUnit inputUnit =
 centerUnit : Int -> Unit -> Unit
 centerUnit boardWidth unit =
   let
-    distance = (boardWidth - (unitWidth unit)) // 2
+    distance = (boardWidth - (unitWidth unit)) // 2 - (fst << edgesOfUnit) unit
     command  = (if distance < 0 then Move W else Move E)
     commands = List.repeat (abs distance) command
   in
     List.foldl commandUnit unit commands
 
-unitWidth : Unit -> Int
-unitWidth unit =
+edgesOfUnit : Unit -> (Int, Int)
+edgesOfUnit unit =
   let
     inputCells =
       List.map toInputCell unit.cells
@@ -56,4 +56,11 @@ unitWidth unit =
 
     ((Just min), (Just max)) = (List.minimum xs, List.maximum xs)
   in
-    max - min + 1
+    (min, max)
+
+unitWidth : Unit -> Int
+unitWidth unit =
+  let
+    (left, right) = edgesOfUnit unit
+  in
+    right - left + 1
